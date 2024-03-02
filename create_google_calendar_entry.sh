@@ -1,15 +1,24 @@
 #!/usr/bin/env bash
 
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
+# import the configuration variables
+source "${SCRIPT_DIR}/my.config"
 
+# check the variables are set
+for variable in my_client_id calendar_id my_token
+do
+   if [[ "${!variable}" == "YOUR VALUE HERE" ]]
+   then
+      echo "ERROR: ${variable} not set in config file. See README.md" >&2
+      exit 1
+   fi
+done
 
-my_token='SEE INSTRUCTIONS IN README.md'
-my_client_id='SEE INSTRUCTIONS IN README.md'
-calendar_id='SEE INSTRUCTIONS IN README.md'
-time_zone='America/New_York'
-time_zone_numeric='-05:00'
 
 get_authorization_token() {
+# lanuch a browswer to get the authorization token
+
    local request=''
       request+='https://accounts.google.com/o/oauth2/v2/auth?'
       request+='scope=https%3A//www.googleapis.com/auth/calendar&'
@@ -22,6 +31,7 @@ get_authorization_token() {
 }
 
 list_calendars() {
+# print a list of calendars to the screen
    curl --request GET \
      'https://www.googleapis.com/calendar/v3/users/me/calendarList?client_id='${my_client_id} \
      --header 'Authorization: Bearer '${my_token} \
@@ -30,8 +40,10 @@ list_calendars() {
 }
 
 list_events_in_range() {
-   local start_date_exclusive # YYYY-MM-DD
-   local end_date_exclusive   # YYYY-MM-DD
+# print a list of events on the specified calendar that are within a date range
+
+   local start_date_exclusive=$1 # YYYY-MM-DD
+   local end_date_exclusive=$2   # YYYY-MM-DD
 
    curl --request GET \
      'https://www.googleapis.com/calendar/v3/calendars/'${calendar_id}'/events' \
@@ -43,6 +55,7 @@ list_events_in_range() {
 }
 
 add_timed_entry(){
+# add an entry to the calendar that has a duration
    local day=$1 # YYYY-MM-DD
    local start_time=$2
    local end_time=$3
@@ -53,6 +66,8 @@ add_timed_entry(){
 
 
 add_all_day_entry(){
+# add an entry to the calendar that is an all day event
+
    local day=$1 # YYYY-MM-DD
    local summary="$2"
 
@@ -60,6 +75,7 @@ add_all_day_entry(){
 }
 
 add_entry() {
+# helper function that actually adds entries to the calendar
    local data=$1
 
    curl --request POST \
@@ -72,6 +88,7 @@ add_entry() {
 }
 
 add_new_entries(){
+# edit this function as needed to
 }
 
 
@@ -82,7 +99,7 @@ main() {
    # add_timed_entry '2021-11-27' '20' '21' "run 5"
    # list_calendars
    # list_events_in_range '2021-11-27' '2022-01-01'
-   add_new_entries
+   # add_new_entries
 }
 
 main
